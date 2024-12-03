@@ -5,13 +5,13 @@ import styles from './RecommendationCard.module.css';
 import Image from 'next/image';
 
 interface RecommendationCardProps {
-  _id: string; // ID of the artist
+  _id: string;
   imageUrl: string;
   artist: string;
   genre: string;
   vibes: string;
   popularity: string;
-  onDelete: (id: string) => void; // Callback function for deleting the artist
+  onDelete: (id: string) => void; 
 }
 
 const RecommendationCard: React.FC<RecommendationCardProps> = ({ _id, imageUrl, artist, genre, vibes, popularity, onDelete }) => {
@@ -21,11 +21,14 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({ _id, imageUrl, 
     }
   };
 
+
+  const validImageUrl = imageUrl && imageUrl.trim() !== '' ? imageUrl : '/headphones.png';
+
   return (
     <div className={styles.card}>
       <Image
         className={styles['img-Adjust']}
-        src={imageUrl}
+        src={validImageUrl}
         alt={`${artist} avatar`}
         width={100}
         height={100}
