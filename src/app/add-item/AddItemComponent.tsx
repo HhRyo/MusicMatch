@@ -6,41 +6,51 @@ import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 
 interface FormData {
-  playlistName: string;
-  image: File | null;
+  name: string; 
+  imageUrl: string; 
   songInput: string;
   songs: string[];
   tags: string;
 }
 
 interface Playlist {
-  playlistName: string;
+  _id: string;
+  name: string; // Replaced playlistName with name
   imageUrl: string;
   songs: string[];
-  tags: string;
+  tags: string | string[];
 }
 
 const AddItemComponent: React.FC = () => {
   const router = useRouter();
-
   const [formData, setFormData] = useState<FormData>({
-    playlistName: '',
-    image: null,
+    name: '', // Replaced playlistName with name
+    imageUrl: '',
     songInput: '',
     songs: [],
     tags: '',
   });
-
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
-  const [searchResults, setSearchResults] = useState<any[]>([]); // Store iTunes search results
-
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const storedPlaylists = localStorage.getItem('playlists');
-    if (storedPlaylists) {
-      setPlaylists(JSON.parse(storedPlaylists));
-    }
+    // Fetch playlists from the backend
+    const fetchPlaylists = async () => {
+      try {
+        const response = await fetch('/api/playlist');
+        if (response.ok) {
+          const data = await response.json();
+          setPlaylists(data);
+        } else {
+          console.error('Failed to fetch playlists');
+        }
+      } catch (error) {
+        console.error('Error fetching playlists:', error);
+      }
+    };
+
+    fetchPlaylists();
   }, []);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -49,15 +59,6 @@ const AddItemComponent: React.FC = () => {
       ...formData,
       [name]: value,
     });
-  };
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData({
-        ...formData,
-        image: e.target.files[0],
-      });
-    }
   };
 
   const searchiTunes = async (query: string) => {
@@ -85,38 +86,53 @@ const AddItemComponent: React.FC = () => {
       songs: updatedSongs,
       songInput: '',
     });
-    setSearchResults([]); // Clear search results after adding a song
+    setSearchResults([]); 
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!formData.playlistName || formData.songs.length === 0 || !formData.tags) {
+    const tagsArray = formData.tags.split(',').map(tag => tag.trim());
+
+    if (!formData.name || formData.songs.length === 0 || tagsArray.length === 0) {
       alert('Please fill out all fields!');
       return;
     }
 
-    const newPlaylist: Playlist = {
-      playlistName: formData.playlistName,
-      imageUrl: formData.image ? URL.createObjectURL(formData.image) : '/headphones.png',
+    const newPlaylist = {
+      name: formData.name, 
+      imageUrl: formData.imageUrl, 
       songs: formData.songs,
-      tags: formData.tags,
+      tags: tagsArray, 
     };
 
-    const updatedPlaylists = [...playlists, newPlaylist];
-    setPlaylists(updatedPlaylists);
-    localStorage.setItem('playlists', JSON.stringify(updatedPlaylists));
+    try {
+      const response = await fetch('/api/playlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newPlaylist),
+      });
 
-    setFormData({
-      playlistName: '',
-      image: null,
-      songInput: '',
-      songs: [],
-      tags: '',
-    });
-
-    if (imageInputRef.current) {
-      imageInputRef.current.value = '';
+      if (response.ok) {
+        const data = await response.json();
+        setPlaylists([...playlists, data.artist]); 
+        setFormData({
+          name: '', 
+          imageUrl: '',
+          songInput: '',
+          songs: [],
+          tags: '',
+        });
+        if (imageInputRef.current) {
+          imageInputRef.current.value = '';
+        }
+      } else {
+        alert('Error creating playlist');
+      }
+    } catch (error) {
+      console.error('Error creating playlist:', error);
     }
   };
 
@@ -127,6 +143,22 @@ const AddItemComponent: React.FC = () => {
 
   const handleGoToMusicMatch = () => {
     router.push('/add-recommendation');
+  };
+
+  const handleDeletePlaylist = async (id: string) => {
+    try {
+      const response = await fetch(`/api/playlist/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        setPlaylists(playlists.filter((playlist) => playlist._id !== id));
+      } else {
+        console.error('Error deleting playlist');
+      }
+    } catch (error) {
+      console.error('Error deleting playlist:', error);
+    }
   };
 
   return (
@@ -149,26 +181,25 @@ const AddItemComponent: React.FC = () => {
 
       <div className={styles['create-playlist']}>
         <form onSubmit={handleSubmit} className={styles['playlist-form']}>
-          <h2>Create Playlist</h2>
           <div className={styles['form-group']}>
-            <label htmlFor="playlistName">Playlist Name</label>
+            <label htmlFor="name">Playlist Name</label>
             <input
               type="text"
-              id="playlistName"
-              name="playlistName"
-              value={formData.playlistName}
+              id="name" 
+              name="name" 
+              value={formData.name} 
               onChange={handleChange}
             />
           </div>
 
           <div className={styles['form-group']}>
-            <label htmlFor="image">Upload Image</label>
+            <label htmlFor="imageUrl">Add Image URL</label>
             <input
-              type="file"
-              id="image"
-              name="image"
-              ref={imageInputRef}
-              onChange={handleImageChange}
+              type="text"
+              id="imageUrl"
+              name="imageUrl"
+              value={formData.imageUrl}
+              onChange={handleChange}
             />
           </div>
 
@@ -181,34 +212,27 @@ const AddItemComponent: React.FC = () => {
               value={formData.songInput}
               onChange={handleChange}
             />
-            <button
-              type="button"
-              onClick={handleSongSearch}
-              className={styles['add-song-button']}
-            >
+            <button  className={styles['s-button']} type="button" onClick={handleSongSearch} >
               Search
             </button>
           </div>
 
           <div className={styles['search-results']}>
             {searchResults.map((song, index) => (
-              <div key={index} className={styles['search-result']} onClick={() => handleAddSong(song)}>
-                <p>
-                  {song.trackName} by {song.artistName}
-                </p>
+              <div key={index} onClick={() => handleAddSong(song)} className={styles['search-result']}>
+                <p>{song.trackName} by {song.artistName}</p>
               </div>
             ))}
           </div>
 
           <div className={styles['songs-list']}>
-            <h3>Added Songs:</h3>
             {formData.songs.map((song, index) => (
               <p key={index}>{song}</p>
             ))}
           </div>
 
           <div className={styles['form-group']}>
-            <label htmlFor="tags">Add Tags</label>
+            <label htmlFor="tags">Tags</label>
             <input
               type="text"
               id="tags"
@@ -218,32 +242,27 @@ const AddItemComponent: React.FC = () => {
             />
           </div>
 
-          <button type="submit" className={styles['submit-button']}>
-            Create!
-          </button>
+          <button type="submit" className={styles['submit-button']}>Create Playlist</button>
         </form>
       </div>
 
       <div className={styles['my-playlists']}>
         <h2>My Playlists</h2>
-        {playlists.map((playlist, index) => (
-          <div key={index} className={styles['playlist-card']}>
-            <div className={styles['playlist-card-header']}>
-              <img src={playlist.imageUrl} alt={playlist.playlistName} className={styles['playlist-image']} />
-              <h3>{playlist.playlistName}</h3>
-            </div>
-            <div className={styles['songs-list']}>
-              <p><strong>Songs:</strong></p>
-              {playlist.songs.map((song, i) => (
-                <p key={i}>{song}</p>
-              ))}
-            </div>
-            <div className={styles['tags-list']}>
-              <p><strong>Tags:</strong></p>
-              {playlist.tags.split(',').map((tag, i) => (
-                <p key={i}>{tag}</p>
-              ))}
-            </div>
+        {playlists.map((playlist) => (
+          <div key={playlist._id} className={styles['playlist-card']}>
+            <h3>{playlist.name}</h3> 
+            <img src={playlist.imageUrl} alt={playlist.name} /> 
+            <p><strong>Songs:</strong></p>
+            {playlist.songs.map((song, i) => (
+              <p key={i}>{song}</p>
+            ))}
+            <p><strong>Tags:</strong></p>
+            {Array.isArray(playlist.tags) ? (
+              playlist.tags.map((tag, i) => <p key={i}>{tag}</p>)
+            ) : (
+              <p>{playlist.tags}</p>
+            )}
+            <button  className={styles['delete-button']} onClick={() => handleDeletePlaylist(playlist._id)}>Delete</button>
           </div>
         ))}
       </div>
