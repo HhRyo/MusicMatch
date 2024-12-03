@@ -135,6 +135,22 @@ body {
   border-radius: 5px;
 }
 
+.s-button {
+  display: block;
+  margin: 30px auto;
+  margin-left: 230px;
+  padding-left: 30px;
+  padding-right: 30px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background-color: #4a2b2b;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+.s-button:hover {
+  background-color: #ac4747;
+}
 .submit-button:hover {
   background-color: #ac4747;
 }
@@ -195,6 +211,16 @@ body {
   font-size: 14px;
 }
 
+.delete-button {
+  background-color: #d9534f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
 
 /* for the song input and list */
 .songs-list p {
