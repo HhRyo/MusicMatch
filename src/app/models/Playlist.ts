@@ -1,34 +1,32 @@
 import mongoose, { Schema, model, models } from "mongoose";
 
-const playlistSchema = new Schema(
+const artistSchema = new Schema(
   {
-    _id: {
+    vibes: {
+      type: String,
+      required: true,
+    },
+    genre: {
         type: String,
         required: true,
-      },
-    name: {
-      type: String,
-      required: true,
+    },
+    artist: {
+        type: String,
+        required: true,
+    },
+    popularity: {
+        type: String,
+        required: true,
     },
     imageUrl: {
-      type: String,
-      required: false,
-      default: "/logo.png"
-    },
-    songs: {
-      type: [String],
-      required: true,
-      default: [],
-    },
-    tags: {
-      type: [String],
-      required: false,
-      default: [],
+        type: String,
+        required: false,
+        default:"/logo.png"
     },
   },
 );
 
-const Playlist = models.Playlist || model("Playlist", playlistSchema);
+const Artist = models.Artist || model("Artist", artistSchema);
 
-export default Playlist;
+export default Artist;
 
