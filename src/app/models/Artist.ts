@@ -2,10 +2,6 @@ import mongoose, { Schema, model, models } from "mongoose";
 
 const artistSchema = new Schema(
   {
-    _id: {
-        type: String,
-        required: false,
-      },
     vibes: {
       type: String,
       required: true,
