@@ -5,6 +5,8 @@ import AddRecommendationForm from './AddRecommendationForm';
 import RecommendationCard from './RecommendationCard';
 import LoggedInHeader from './LoggedInHeader';
 import styles from './AddRecommendationPage.module.css';
+import { useSession } from "next-auth/react";
+
 
 interface Artist {
   _id: string;
@@ -14,6 +16,7 @@ interface Artist {
   vibes: string;
   popularity: string;
 }
+
 
 const AddRecommendationPage: React.FC = () => {
   const [addedArtists, setAddedArtists] = useState<Artist[]>([]);
@@ -68,6 +71,7 @@ const AddRecommendationPage: React.FC = () => {
             <div className={styles['scrollable-content']}>
               {addedArtists.map((artist) => (
                 <RecommendationCard
+                  key={artist._id}
                   _id={artist._id}
                   imageUrl={artist.imageUrl}
                   artist={artist.artist}
