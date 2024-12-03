@@ -9,7 +9,7 @@ const AddRecommendationForm: React.FC = () => {
     genre: '',
     artist: '',
     imageUrl: '',
-    popularity: '1', // Set a default value for popularity
+    popularity: '1', 
   });
   const [isLoading, setIsLoading] = useState(false); // To handle form state
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -26,15 +26,13 @@ const AddRecommendationForm: React.FC = () => {
     setErrorMessage(null);
     setSuccessMessage(null);
   
-    // Check if all required fields are filled
-    if (!formData.vibes || !formData.genre || !formData.artist || !formData.popularity) {
+    if (!formData.vibes || !formData.genre || !formData.artist || !formData.popularity || !formData.imageUrl) {
       setErrorMessage("Please fill in all required fields.");
       setIsLoading(false);
       return;
     }
   
     try {
-      // Make the POST request to add the artist
       const response = await fetch(`/api/artist`, {
         method: "POST",
         headers: {
@@ -43,23 +41,19 @@ const AddRecommendationForm: React.FC = () => {
         body: JSON.stringify(formData),
       });
   
-      // Handle non-OK responses
       if (!response.ok) {
         const errorDetails = await response.json();
         throw new Error(errorDetails.message || "Failed to add artist recommendation.");
       }
   
-      // Handle success response
       const data = await response.json();
       console.log("Recommendation added successfully:", data);
       setSuccessMessage("Recommendation added successfully!");
   
-      // Reset the form
       setFormData({ vibes: "", genre: "", artist: "", imageUrl: "", popularity: "1" });
 
       window.location.reload();
 
-      
     } catch (error: any) {
       console.error("Error adding recommendation:", error.message);
       setErrorMessage(error.message || "Something went wrong.");
@@ -153,6 +147,7 @@ const AddRecommendationForm: React.FC = () => {
           name="imageUrl"
           value={formData.imageUrl}
           onChange={handleChange}
+          required
         />
 
         <button type="submit" className={styles['submit-button']} disabled={isLoading}>
